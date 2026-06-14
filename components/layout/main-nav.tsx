@@ -1,0 +1,133 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { MenuIcon, XIcon } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+export const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/books", label: "Books" },
+  { href: "/dashboard", label: "My Library" },
+  { href: "/admin", label: "Admin" },
+] as const;
+
+function DesktopNavLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        isActive ? "navbar__link--active" : "navbar__link",
+        "no-underline"
+      )}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function MobileNavLink({
+  href,
+  label,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  onClick?: () => void;
+}) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        isActive ? "text-green-forest font-medium" : "text-text-secondary",
+        "mx-0 rounded-none border-b border-[#07593E]/[0.06] py-4 font-body text-body no-underline transition-colors hover:text-green-forest"
+      )}
+    >
+      {label}
+    </Link>
+  );
+}
+
+export function MainNav() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <>
+      <nav className="hidden items-center gap-1 md:flex">
+        {navItems.map((item) => (
+          <DesktopNavLink key={item.href} href={item.href} label={item.label} />
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        className="btn-icon btn-secondary md:hidden"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+      >
+        <MenuIcon className="h-5 w-5" />
+      </button>
+
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-modal bg-black/50 md:hidden"
+            onClick={() => setOpen(false)}
+            aria-hidden
+          />
+          <div className="fixed inset-y-0 left-0 z-modal flex w-[280px] flex-col border-r border-[#07593E]/[0.08] bg-white md:hidden">
+            <div className="flex h-16 items-center border-b border-[#07593E]/[0.06] px-6">
+              <span className="font-heading font-medium text-green-forest">Menu</span>
+              <button
+                type="button"
+                className="btn-icon ml-auto text-green-forest hover:bg-[#07593E]/[0.04]"
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex-1 px-2">
+              {navItems.map((item) => (
+                <MobileNavLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  onClick={() => setOpen(false)}
+                />
+              ))}
+            </nav>
+            <div className="border-t border-[#07593E]/[0.06] p-4">
+              <Link
+                href="/signup"
+                className="block w-full rounded-lg bg-green-forest py-3 text-center font-body text-body-sm font-medium text-white no-underline hover:bg-green-forest/90"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
