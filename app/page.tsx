@@ -45,6 +45,14 @@ const realCategories = Object.entries(catalogGenreCounts)
   .slice(0, 10)
   .map(([name, count]) => ({ name, count }));
 
+const genreCards = [
+  { name: "Fiction", count: catalogGenreCounts["Fiction"] || 0, image: "/images/genre-fiction.png" },
+  { name: "Romance", count: catalogGenreCounts["Romance"] || 0, image: "/images/genre-romance.png" },
+  { name: "Thriller", count: catalogGenreCounts["Thriller / Horror/ Detective Books"] || 0, image: "/images/genre-thriller.png" },
+  { name: "Self-Help", count: catalogGenreCounts["Self Learning - Motivation Books"] || 0, image: "/images/genre-selfhelp.png" },
+  { name: "Biographies", count: catalogGenreCounts["Biographies & Autobiographies"] || 0, image: "/images/genre-biography.png" },
+];
+
 export const metadata: Metadata = {
   title: "Home",
   description: `${BRAND_FOUNDATION_NAME} — search books, browse the catalog, and learn together.`,
@@ -150,32 +158,37 @@ export default function HomePage() {
       </section>
 
       {/* ── Browse by Category — Circular Images ─────────────── */}
-      <section className="bg-white py-16 md:py-24">
+      <section className="bg-white py-14 md:py-20">
         <div className="mx-auto max-w-[1280px] px-6 md:px-12">
-          <div className="mb-12 text-center">
+          <div className="mb-10 text-center">
             <h2 className="font-heading text-h1 font-bold tracking-tight text-green-forest">
-              Browse Books by Category
+              Browse Books by Genre
             </h2>
             <p className="mt-2 font-body text-body text-text-secondary">
-              Explore subjects across education, health, and community learning.
+              {catalogStats.totalBooks} books across {catalogStats.totalGenres} genres.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-            {realCategories.slice(0, 5).map((category) => (
+            {genreCards.map((gc) => (
               <Link
-                key={category.name}
+                key={gc.name}
                 href="/books"
-                className="group flex flex-col items-center gap-4 no-underline"
+                className="group flex flex-col items-center gap-3 no-underline"
               >
-                <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-full border-4 border-[#76BE46]/30 bg-gradient-to-br from-[#07593E]/10 to-[#76BE46]/10 transition-all group-hover:border-[#76BE46] group-hover:shadow-lg group-hover:shadow-[#76BE46]/20">
-                  <BookOpenIcon className="h-10 w-10 text-green-forest/30 transition-transform group-hover:scale-110" />
+                <div className="relative h-36 w-36 overflow-hidden rounded-full border-4 border-[#76BE46]/30 transition-all group-hover:border-[#76BE46] group-hover:shadow-lg group-hover:shadow-[#76BE46]/20">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={gc.image}
+                    alt={gc.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
                 </div>
                 <div className="text-center">
                   <p className="font-heading text-h4 font-bold text-green-forest group-hover:text-green-nature">
-                    {category.name}
+                    {gc.name}
                   </p>
                   <p className="font-body text-body-sm text-text-secondary">
-                    {category.count} books
+                    {gc.count} books
                   </p>
                 </div>
               </Link>

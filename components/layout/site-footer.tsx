@@ -13,16 +13,16 @@ const footerLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-[#07593E]/[0.06] bg-white">
-      <div className="mx-auto max-w-container px-6 py-12 md:px-12 md:py-16">
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-          <div>
+    <footer className="border-t border-[#07593E]/[0.06] bg-[#F8FDF4]">
+      <div className="mx-auto max-w-container px-6 py-6 md:px-12 md:py-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
             <BrandLogo variant="footer" />
-            <p className="mt-4 font-body text-body-sm text-text-secondary">
+            <p className="font-body text-body-sm text-text-secondary">
               {BRAND_LIBRARY_NAME}
             </p>
           </div>
-          <nav className="flex flex-wrap gap-x-8 gap-y-3">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {footerLinks.map((link) => (
               <Link
                 key={link.href}
@@ -34,8 +34,8 @@ export function SiteFooter() {
             ))}
           </nav>
         </div>
-        <div className="mt-12 border-t border-[#07593E]/[0.06] pt-8">
-          <p className="font-body text-body-sm text-text-secondary">
+        <div className="mt-4 border-t border-[#07593E]/[0.06] pt-4">
+          <p className="font-body text-label text-text-secondary/60">
             &copy; {new Date().getFullYear()} {BRAND_FOUNDATION}
           </p>
         </div>
