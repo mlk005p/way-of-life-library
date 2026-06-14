@@ -9,9 +9,18 @@ import {
   InboxIcon,
 } from "lucide-react";
 
-import { BookCard } from "@/components/library/book-card";
 import { useAuth } from "@/components/providers";
-import { recommendedBooks, recentlyAddedBooks } from "@/lib/library-data";
+import { catalogBooks } from "@/lib/library-catalog";
+
+// Pick some recommendations from catalog
+const recommendedCatalogBooks = catalogBooks
+  .filter((b) => b.availability === "available" && b.imageUrl)
+  .slice(10, 16);
+
+const recentCatalogBooks = [...catalogBooks]
+  .filter((b) => b.imageUrl)
+  .sort((a, b) => b.year - a.year)
+  .slice(0, 3);
 
 export default function DashboardPage() {
   const { user, profile, updateMembership, isLoading } = useAuth();
@@ -56,29 +65,13 @@ export default function DashboardPage() {
       icon: CreditCardIcon,
       accent: isMemberActive ? "text-green-nature" : "text-[#F7941D]",
     },
-    {
-      label: "Books Borrowed",
-      value: "0",
-      icon: BookOpenIcon,
-      accent: "text-green-forest",
-    },
-    {
-      label: "Pending Requests",
-      value: "0",
-      icon: ClockIcon,
-      accent: "text-[#3EBCEB]",
-    },
-    {
-      label: "Books Read",
-      value: "0",
-      icon: BarChart3Icon,
-      accent: "text-[#F7941D]",
-    },
+    { label: "Books Borrowed", value: "0", icon: BookOpenIcon, accent: "text-green-forest" },
+    { label: "Pending Requests", value: "0", icon: ClockIcon, accent: "text-[#3EBCEB]" },
+    { label: "Books Read", value: "0", icon: BarChart3Icon, accent: "text-[#F7941D]" },
   ];
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-12 md:py-16">
-      {/* Welcome */}
       <h1 className="font-heading text-h1 font-medium tracking-tight text-green-forest">
         Welcome back, {user.name}
       </h1>
@@ -114,9 +107,7 @@ export default function DashboardPage() {
             {isMemberActive ? (
               <button
                 type="button"
-                onClick={() =>
-                  alert("Membership renewal is a Phase 2 feature.")
-                }
+                onClick={() => alert("Membership renewal is a Phase 2 feature.")}
                 className="rounded-lg border border-[#C8E6A0] px-5 py-2.5 font-body text-body-sm font-medium text-green-forest transition-colors hover:bg-[#EEF8E6]"
               >
                 Renew
@@ -137,23 +128,14 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {dashboardStats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-[#07593E]/[0.08] bg-white p-5"
-          >
+          <div key={stat.label} className="rounded-xl border border-[#07593E]/[0.08] bg-white p-5">
             <div className="flex items-center gap-3">
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEF8E6] ${stat.accent}`}
-              >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEF8E6] ${stat.accent}`}>
                 <stat.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-heading text-h3 font-medium text-green-forest">
-                  {stat.value}
-                </p>
-                <p className="font-body text-label text-text-secondary">
-                  {stat.label}
-                </p>
+                <p className="font-heading text-h3 font-medium text-green-forest">{stat.value}</p>
+                <p className="font-body text-label text-text-secondary">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -162,14 +144,10 @@ export default function DashboardPage() {
 
       {/* Currently Borrowed — empty state */}
       <section className="mt-14">
-        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
-          Currently Borrowed
-        </h2>
+        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">Currently Borrowed</h2>
         <div className="flex flex-col items-center justify-center rounded-xl border border-[#07593E]/[0.08] bg-white py-14 text-center">
           <InboxIcon className="mb-3 h-10 w-10 text-text-secondary/30" />
-          <p className="font-heading text-h4 font-medium text-green-forest">
-            No books borrowed yet
-          </p>
+          <p className="font-heading text-h4 font-medium text-green-forest">No books borrowed yet</p>
           <p className="mt-1.5 max-w-sm font-body text-body-sm text-text-secondary">
             Browse the catalog and add books to your cart to request them.
           </p>
@@ -185,14 +163,10 @@ export default function DashboardPage() {
 
       {/* Pending Requests — empty state */}
       <section className="mt-14">
-        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
-          Pending Requests
-        </h2>
+        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">Pending Requests</h2>
         <div className="flex flex-col items-center justify-center rounded-xl border border-[#07593E]/[0.08] bg-white py-14 text-center">
           <ClockIcon className="mb-3 h-10 w-10 text-text-secondary/30" />
-          <p className="font-heading text-h4 font-medium text-green-forest">
-            No pending requests
-          </p>
+          <p className="font-heading text-h4 font-medium text-green-forest">No pending requests</p>
           <p className="mt-1.5 max-w-sm font-body text-body-sm text-text-secondary">
             When you submit a book request from your cart, it will appear here.
           </p>
@@ -201,24 +175,46 @@ export default function DashboardPage() {
 
       {/* Recommended */}
       <section className="mt-14">
-        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
-          Recommended for you
-        </h2>
-        <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {recommendedBooks.map((book) => (
-            <BookCard key={book.id} book={book} variant="minimal" />
+        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">Recommended for you</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {recommendedCatalogBooks.map((book) => (
+            <Link key={book.id} href={`/books/${book.id}`} className="group flex gap-4 rounded-xl border border-[#07593E]/[0.08] bg-white p-4 no-underline transition-all hover:-translate-y-1 hover:shadow-card-hover">
+              <div className="h-24 w-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#07593E]/10 to-[#76BE46]/10">
+                {book.imageUrl ? (
+                  <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center"><span className="font-heading text-xs font-bold text-green-forest/20">{book.title.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</span></div>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-body text-[10px] font-bold uppercase tracking-wider text-text-secondary">{book.genre}</span>
+                <p className="mt-1 font-heading text-body-sm font-medium leading-snug text-green-forest group-hover:text-green-nature">{book.title}</p>
+                <p className="mt-0.5 font-body text-label text-text-secondary">{book.author}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
 
       {/* Recently Added */}
       <section className="mt-14">
-        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
-          Recently added
-        </h2>
-        <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {recentlyAddedBooks.slice(0, 3).map((book) => (
-            <BookCard key={book.id} book={book} variant="minimal" />
+        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">Recently added</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {recentCatalogBooks.map((book) => (
+            <Link key={book.id} href={`/books/${book.id}`} className="group flex gap-4 rounded-xl border border-[#07593E]/[0.08] bg-white p-4 no-underline transition-all hover:-translate-y-1 hover:shadow-card-hover">
+              <div className="h-24 w-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#07593E]/10 to-[#76BE46]/10">
+                {book.imageUrl ? (
+                  <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center"><span className="font-heading text-xs font-bold text-green-forest/20">{book.title.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</span></div>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-body text-[10px] font-bold uppercase tracking-wider text-text-secondary">{book.genre}</span>
+                <p className="mt-1 font-heading text-body-sm font-medium leading-snug text-green-forest group-hover:text-green-nature">{book.title}</p>
+                <p className="mt-0.5 font-body text-label text-text-secondary">{book.author}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

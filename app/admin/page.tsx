@@ -10,17 +10,11 @@ import {
   ShieldIcon,
   UsersIcon,
   XCircleIcon,
+  InboxIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/components/providers";
-import {
-  adminInventory,
-  adminMembers,
-  adminRecentRequests,
-  books,
-  getAvailabilityBadgeClass,
-  getAvailabilityLabel,
-} from "@/lib/library-data";
+import { catalogBooks, catalogStats } from "@/lib/library-catalog";
 
 type Tab = "overview" | "inventory" | "members";
 
@@ -57,8 +51,7 @@ export default function AdminPage() {
     );
   }
 
-  const availableCount = books.filter((b) => b.availability === "available").length;
-  const pendingCount = adminRecentRequests.filter((r) => r.status === "Pending").length;
+  const availableCount = catalogBooks.filter((b) => b.availability === "available").length;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -96,10 +89,10 @@ export default function AdminPage() {
       {/* Tab content */}
       {activeTab === "overview" && (
         <OverviewTab
-          totalBooks={books.length}
+          totalBooks={catalogStats.totalBooks}
           availableCount={availableCount}
-          memberCount={adminMembers.length}
-          pendingCount={pendingCount}
+          totalAuthors={catalogStats.totalAuthors}
+          totalGenres={catalogStats.totalGenres}
         />
       )}
       {activeTab === "inventory" && (
@@ -115,19 +108,19 @@ export default function AdminPage() {
 function OverviewTab({
   totalBooks,
   availableCount,
-  memberCount,
-  pendingCount,
+  totalAuthors,
+  totalGenres,
 }: {
   totalBooks: number;
   availableCount: number;
-  memberCount: number;
-  pendingCount: number;
+  totalAuthors: number;
+  totalGenres: number;
 }) {
   const overviewStats = [
     { label: "Total Books", value: totalBooks, icon: BookOpenIcon },
     { label: "Available", value: availableCount, icon: CheckCircleIcon },
-    { label: "Members", value: memberCount, icon: UsersIcon },
-    { label: "Pending Requests", value: pendingCount, icon: SearchIcon },
+    { label: "Authors", value: totalAuthors, icon: UsersIcon },
+    { label: "Genres", value: totalGenres, icon: SearchIcon },
   ];
 
   return (
@@ -156,96 +149,19 @@ function OverviewTab({
         ))}
       </div>
 
-      {/* Recent requests */}
+      {/* Recent requests — empty (no mock data) */}
       <section className="mt-12">
         <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
           Recent Requests
         </h2>
-        <div className="overflow-x-auto rounded-xl border border-[#07593E]/[0.08]">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[#07593E]/[0.06] bg-[#F8FDF4]">
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Member</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Book</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Date</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Status</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {adminRecentRequests.map((req, i) => (
-                <tr key={i} className="border-b border-[#07593E]/[0.04] last:border-0">
-                  <td className="px-5 py-4 font-body text-body font-medium text-green-forest">{req.member}</td>
-                  <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{req.book}</td>
-                  <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{req.date}</td>
-                  <td className="px-5 py-4">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 font-body text-label font-semibold uppercase ${
-                      req.status === "Pending" ? "badge-info" : req.status === "Approved" ? "badge-available" : "badge-borrowed"
-                    }`}>
-                      {req.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    {req.status === "Pending" ? (
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => alert(`Approved request from ${req.member} for "${req.book}"`)}
-                          className="flex items-center gap-1 rounded-md bg-green-forest px-3 py-1.5 font-body text-label font-medium text-white transition-colors hover:bg-green-forest/90"
-                        >
-                          <CheckCircleIcon className="h-3.5 w-3.5" />
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => alert(`Rejected request from ${req.member}`)}
-                          className="flex items-center gap-1 rounded-md border border-red-200 bg-white px-3 py-1.5 font-body text-label font-medium text-red-600 transition-colors hover:bg-red-50"
-                        >
-                          <XCircleIcon className="h-3.5 w-3.5" />
-                          Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="font-body text-label text-text-secondary">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Member overview */}
-      <section className="mt-12">
-        <h2 className="mb-6 font-heading text-h3 font-medium text-green-forest">
-          Member Overview
-        </h2>
-        <div className="overflow-x-auto rounded-xl border border-[#07593E]/[0.08]">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[#07593E]/[0.06] bg-[#F8FDF4]">
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Name</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Books</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Status</th>
-                <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {adminMembers.map((member) => (
-                <tr key={member.name} className="border-b border-[#07593E]/[0.04] last:border-0">
-                  <td className="px-5 py-4 font-body text-body font-medium text-green-forest">{member.name}</td>
-                  <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{member.booksBorrowed}</td>
-                  <td className="px-5 py-4">
-                    <span className="badge-available inline-flex rounded-full px-2.5 py-0.5 font-body text-label font-semibold uppercase">
-                      {member.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{member.joined}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[#07593E]/[0.08] bg-white py-14 text-center">
+          <InboxIcon className="mb-3 h-10 w-10 text-text-secondary/30" />
+          <p className="font-heading text-h4 font-medium text-green-forest">
+            No pending requests
+          </p>
+          <p className="mt-1.5 max-w-sm font-body text-body-sm text-text-secondary">
+            Member book requests will appear here when submitted.
+          </p>
         </div>
       </section>
     </>
@@ -261,16 +177,22 @@ function InventoryTab({
   search: string;
   setSearch: (v: string) => void;
 }) {
+  const [page, setPage] = useState(1);
+  const perPage = 20;
+
   const filteredInventory = useMemo(() => {
-    if (!search) return adminInventory;
+    if (!search) return catalogBooks;
     const q = search.toLowerCase();
-    return adminInventory.filter(
+    return catalogBooks.filter(
       (b) =>
         b.title.toLowerCase().includes(q) ||
         b.author.toLowerCase().includes(q) ||
         b.genre.toLowerCase().includes(q)
     );
   }, [search]);
+
+  const totalPages = Math.ceil(filteredInventory.length / perPage);
+  const paged = filteredInventory.slice((page - 1) * perPage, page * perPage);
 
   return (
     <>
@@ -281,18 +203,23 @@ function InventoryTab({
             type="text"
             placeholder="Search inventory…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="h-10 w-full rounded-lg border border-[#C8E6A0] bg-white pl-10 pr-4 font-body text-body-sm text-green-forest placeholder:text-text-secondary/50 outline-none transition-colors focus:border-[#3EBCEB] focus:ring-1 focus:ring-[#3EBCEB]/30"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => alert("Add Book is a Phase 2 feature.")}
-          className="inline-flex items-center gap-2 rounded-lg bg-green-forest px-5 py-2.5 font-body text-body-sm font-medium text-white transition-colors hover:bg-green-forest/90"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Add Book
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="font-body text-body-sm text-text-secondary">
+            {filteredInventory.length} books
+          </span>
+          <button
+            type="button"
+            onClick={() => alert("Add Book is a Phase 2 feature.")}
+            className="inline-flex items-center gap-2 rounded-lg bg-green-forest px-5 py-2.5 font-body text-body-sm font-medium text-white transition-colors hover:bg-green-forest/90"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Add Book
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[#07593E]/[0.08]">
@@ -302,31 +229,42 @@ function InventoryTab({
               <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Title</th>
               <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Author</th>
               <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Genre</th>
-              <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Level</th>
-              <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Copies</th>
+              <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Year</th>
+              <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Language</th>
               <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Status</th>
-              <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Location</th>
             </tr>
           </thead>
           <tbody>
-            {filteredInventory.map((book) => (
+            {paged.map((book) => (
               <tr key={book.id} className="border-b border-[#07593E]/[0.04] last:border-0">
                 <td className="px-5 py-4 font-body text-body font-medium text-green-forest">{book.title}</td>
                 <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.author}</td>
                 <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.genre}</td>
-                <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.class}</td>
-                <td className="px-5 py-4 font-body text-body-sm font-semibold text-green-forest">{book.copies}</td>
+                <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.year}</td>
+                <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.language}</td>
                 <td className="px-5 py-4">
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 font-body text-label font-semibold uppercase ${getAvailabilityBadgeClass(book.availability)}`}>
-                    {getAvailabilityLabel(book.availability)}
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 font-body text-label font-semibold uppercase ${
+                    book.availability === "available" ? "badge-available" : "badge-borrowed"
+                  }`}>
+                    {book.availability}
                   </span>
                 </td>
-                <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{book.location}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+            className="rounded-lg border border-[#C8E6A0] bg-white px-3 py-1.5 font-body text-body-sm text-green-forest disabled:opacity-40">Prev</button>
+          <span className="font-body text-body-sm text-text-secondary">Page {page} of {totalPages}</span>
+          <button type="button" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
+            className="rounded-lg border border-[#C8E6A0] bg-white px-3 py-1.5 font-body text-body-sm text-green-forest disabled:opacity-40">Next</button>
+        </div>
+      )}
     </>
   );
 }
@@ -335,43 +273,14 @@ function InventoryTab({
 
 function MembersTab() {
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#07593E]/[0.08]">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="border-b border-[#07593E]/[0.06] bg-[#F8FDF4]">
-            <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Name</th>
-            <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Books Borrowed</th>
-            <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Status</th>
-            <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Joined</th>
-            <th className="px-5 py-3 font-body text-label uppercase tracking-wider text-text-secondary">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {adminMembers.map((member) => (
-            <tr key={member.name} className="border-b border-[#07593E]/[0.04] last:border-0">
-              <td className="px-5 py-4 font-body text-body font-medium text-green-forest">{member.name}</td>
-              <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{member.booksBorrowed}</td>
-              <td className="px-5 py-4">
-                <span className="badge-available inline-flex rounded-full px-2.5 py-0.5 font-body text-label font-semibold uppercase">
-                  {member.status}
-                </span>
-              </td>
-              <td className="px-5 py-4 font-body text-body-sm text-text-secondary">{member.joined}</td>
-              <td className="px-5 py-4">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => alert(`${member.name}'s membership deactivated (demo).`)}
-                    className="rounded-md border border-red-200 bg-white px-3 py-1.5 font-body text-label font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    Deactivate
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-[#07593E]/[0.08] bg-white py-14 text-center">
+      <UsersIcon className="mb-3 h-10 w-10 text-text-secondary/30" />
+      <p className="font-heading text-h4 font-medium text-green-forest">
+        No members registered yet
+      </p>
+      <p className="mt-1.5 max-w-sm font-body text-body-sm text-text-secondary">
+        Members who sign up will appear here. Member management is a Phase 2 feature.
+      </p>
     </div>
   );
 }
