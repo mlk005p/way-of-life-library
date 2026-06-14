@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeftIcon,
-  BookOpenIcon,
   CheckIcon,
   ShoppingCartIcon,
 } from "lucide-react";
@@ -154,7 +153,7 @@ export default function BookDetailPage() {
                     author: book.author,
                     genre: book.genre,
                     availability: book.availability,
-                  } as any)
+                  } as { id: number; title: string; author: string; genre: string; availability: string })
                 }
                 className="inline-flex items-center gap-2 rounded-xl bg-green-forest px-8 py-3.5 font-body text-body font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-green-forest/90 hover:shadow-lg"
               >

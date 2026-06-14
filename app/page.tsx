@@ -40,7 +40,7 @@ const recentCatalogBooks = [...catalogBooks]
 
 // Top categories with images
 const realCategories = Object.entries(catalogGenreCounts)
-  .filter(([_, count]) => count >= 5)
+  .filter(([_name, count]) => count >= 5)
   .sort((a, b) => b[1] - a[1])
   .slice(0, 10)
   .map(([name, count]) => ({ name, count }));
@@ -59,13 +59,7 @@ const stats = [
 
 const stepIcons = [UserPlusIcon, SearchIcon, BookOpenIcon, ArrowRightLeftIcon];
 
-const categoryImages: Record<string, string> = {
-  "Agriculture": "/images/cat-agriculture.png",
-  "Education": "/images/cat-education.png",
-  "Environment": "/images/cat-environment.png",
-  "Health": "/images/cat-health.png",
-  "Technology": "/images/cat-technology.png",
-};
+
 
 const buyingPoints = [
   { text: "₹400+ per book", bad: true },

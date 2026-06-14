@@ -174,7 +174,7 @@ export default function BooksPage() {
                 author: book.author,
                 genre: book.genre,
                 availability: book.availability,
-              } as any)
+              } as { id: number; title: string; author: string; genre: string; availability: string })
             }
           />
         ))}

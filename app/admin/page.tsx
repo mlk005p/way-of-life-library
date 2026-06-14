@@ -9,7 +9,6 @@ import {
   SearchIcon,
   ShieldIcon,
   UsersIcon,
-  XCircleIcon,
   InboxIcon,
 } from "lucide-react";
 
