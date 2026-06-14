@@ -16,7 +16,7 @@ type BrandLogoProps = {
 
 const sizeClasses = {
   navbar: "max-h-14 w-auto sm:max-h-16",
-  footer: "max-h-36 w-auto",
+  footer: "max-h-16 w-auto",
   "hero-brand": "max-h-16 w-auto sm:max-h-[4.5rem]",
   auth: "max-h-44 w-auto mx-auto",
   dashboard: "max-h-32 w-auto",

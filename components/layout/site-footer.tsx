@@ -14,7 +14,7 @@ const footerLinks = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#07593E]/[0.06] bg-[#F8FDF4]">
-      <div className="mx-auto max-w-container px-6 py-6 md:px-12 md:py-8">
+      <div className="mx-auto max-w-container px-6 py-4 md:px-12 md:py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <BrandLogo variant="footer" />
@@ -34,7 +34,7 @@ export function SiteFooter() {
             ))}
           </nav>
         </div>
-        <div className="mt-4 border-t border-[#07593E]/[0.06] pt-4">
+        <div className="mt-3 border-t border-[#07593E]/[0.06] pt-3">
           <p className="font-body text-label text-text-secondary/60">
             &copy; {new Date().getFullYear()} {BRAND_FOUNDATION}
           </p>
