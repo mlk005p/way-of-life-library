@@ -36,7 +36,7 @@ export default function BookDetailPage() {
     );
   }
 
-  const inCart = items.some((i) => i.id === book.id);
+  const inCart = items.some((i) => String(i.id) === String(book.id));
   const relatedBooks = catalogBooks
     .filter((b) => b.genre === book.genre && b.id !== book.id)
     .slice(0, 4);
@@ -148,12 +148,19 @@ export default function BookDetailPage() {
                 type="button"
                 onClick={() =>
                   addItem({
-                    id: book.id,
+                    id: String(book.id),
                     title: book.title,
                     author: book.author,
                     genre: book.genre,
                     availability: book.availability,
-                  } as { id: number; title: string; author: string; genre: string; availability: string })
+                    class: "",
+                    description: "",
+                    year: book.year || 0,
+                    pages: 0,
+                    isbn: book.isbn || "",
+                    quantity: 1,
+                    coverAccent: "green",
+                  })
                 }
                 className="inline-flex items-center gap-2 rounded-xl bg-green-forest px-8 py-3.5 font-body text-body font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-green-forest/90 hover:shadow-lg"
               >

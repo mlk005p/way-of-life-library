@@ -166,15 +166,22 @@ export default function BooksPage() {
           <CatalogCard
             key={book.id}
             book={book}
-            inCart={items.some((i) => i.id === book.id)}
+            inCart={items.some((i) => String(i.id) === String(book.id))}
             onAdd={() =>
               addItem({
-                id: book.id,
+                id: String(book.id),
                 title: book.title,
                 author: book.author,
                 genre: book.genre,
                 availability: book.availability,
-              } as { id: number; title: string; author: string; genre: string; availability: string })
+                class: "",
+                description: "",
+                year: book.year || 0,
+                pages: 0,
+                isbn: book.isbn || "",
+                quantity: 1,
+                coverAccent: "green",
+              })
             }
           />
         ))}

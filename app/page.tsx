@@ -38,12 +38,6 @@ const recentCatalogBooks = [...catalogBooks]
   .sort((a, b) => b.year - a.year)
   .slice(0, 3);
 
-// Top categories with images
-const realCategories = Object.entries(catalogGenreCounts)
-  .filter(([_name, count]) => count >= 5)
-  .sort((a, b) => b[1] - a[1])
-  .slice(0, 10)
-  .map(([name, count]) => ({ name, count }));
 
 const genreCards = [
   { name: "Fiction", count: catalogGenreCounts["Fiction"] || 0, image: "/images/genre-fiction.png" },
