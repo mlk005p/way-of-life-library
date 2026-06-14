@@ -1,10 +1,15 @@
+"use client";
+
+import Link from "next/link";
+import { ShoppingCartIcon, CheckIcon } from "lucide-react";
+
 import type { Book } from "@/lib/library-data";
 import {
   getAvailabilityBadgeClass,
   getAvailabilityLabel,
 } from "@/lib/library-data";
-
 import { BookCover } from "@/components/library/book-cover";
+import { useCart } from "@/components/providers";
 import { cn } from "@/lib/utils";
 
 type BookCardProps = {
@@ -18,6 +23,9 @@ export function BookCard({
   showRequest = true,
   variant = "default",
 }: BookCardProps) {
+  const { items, addItem } = useCart();
+  const inCart = items.some((item) => item.id === book.id);
+
   if (variant === "minimal") {
     return (
       <article className="group flex flex-col">
@@ -36,20 +44,41 @@ export function BookCard({
               {getAvailabilityLabel(book.availability)}
             </span>
           </div>
-          <h3 className="font-heading text-h4 font-medium text-green-forest leading-snug">
+          <Link
+            href={`/books/${book.id}`}
+            className="font-heading text-h4 font-medium text-green-forest leading-snug no-underline transition-colors hover:text-green-nature"
+          >
             {book.title}
-          </h3>
+          </Link>
           <p className="mt-1 font-body text-body-sm text-text-secondary">
             {book.author}
           </p>
           {showRequest && (
-            <button
-              type="button"
-              className="mt-5 w-full rounded-lg border border-green-forest/20 py-2.5 font-body text-body-sm font-medium text-green-forest transition-colors hover:border-green-nature hover:bg-[#76BE46]/[0.06] disabled:opacity-40"
-              disabled={book.availability !== "available"}
-            >
-              {book.availability === "available" ? "Request" : "Unavailable"}
-            </button>
+            <div className="mt-5">
+              {inCart ? (
+                <div className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-green-nature/30 bg-green-nature/10 py-2.5 font-body text-body-sm font-medium text-green-nature">
+                  <CheckIcon className="h-4 w-4" />
+                  In Cart
+                </div>
+              ) : book.availability === "available" ? (
+                <button
+                  type="button"
+                  onClick={() => addItem(book)}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-green-forest/20 py-2.5 font-body text-body-sm font-medium text-green-forest transition-colors hover:border-green-nature hover:bg-[#76BE46]/[0.06]"
+                >
+                  <ShoppingCartIcon className="h-4 w-4" />
+                  Add to Cart
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-green-forest/20 py-2.5 font-body text-body-sm font-medium text-green-forest transition-colors disabled:opacity-40"
+                  disabled
+                >
+                  Unavailable
+                </button>
+              )}
+            </div>
           )}
         </div>
       </article>
@@ -66,19 +95,41 @@ export function BookCard({
             {getAvailabilityLabel(book.availability)}
           </span>
         </div>
-        <h3 className="card-book__title">{book.title}</h3>
+        <Link
+          href={`/books/${book.id}`}
+          className="card-book__title no-underline transition-colors hover:text-green-nature"
+        >
+          {book.title}
+        </Link>
         <p className="card-book__author">by {book.author}</p>
         <p className="mt-1 font-body text-body-sm text-text-secondary">
           Class: {book.class}
         </p>
         {showRequest && (
-          <button
-            type="button"
-            className="btn-primary mt-auto w-full pt-4"
-            disabled={book.availability !== "available"}
-          >
-            {book.availability === "available" ? "Request Book" : "Unavailable"}
-          </button>
+          <div className="mt-auto pt-4">
+            {inCart ? (
+              <div className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-green-nature/30 bg-green-nature/10 py-2.5 font-body text-body-sm font-medium text-green-nature">
+                <CheckIcon className="h-4 w-4" />
+                In Cart
+              </div>
+            ) : book.availability === "available" ? (
+              <button
+                type="button"
+                onClick={() => addItem(book)}
+                className="btn-primary w-full"
+              >
+                Add to Cart
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn-primary w-full"
+                disabled
+              >
+                Unavailable
+              </button>
+            )}
+          </div>
         )}
       </div>
     </article>

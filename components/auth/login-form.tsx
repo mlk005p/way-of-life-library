@@ -1,11 +1,48 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Loader2Icon } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { BRAND_LIBRARY_NAME } from "@/lib/brand";
+import { useAuth } from "@/components/providers";
 
 export function LoginForm() {
+  const { login, profile } = useAuth();
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await login(email, password);
+      /* Redirect based on role — profile may not be available immediately,
+         so we also check the email heuristic for admin */
+      if (profile?.role === "admin" || email.toLowerCase().includes("admin")) {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="card-padded w-full max-w-md">
       <div className="mb-6 flex justify-center">
@@ -18,10 +55,7 @@ export function LoginForm() {
         Sign in to {BRAND_LIBRARY_NAME} to access your library portal.
       </p>
 
-      <form
-        className="form-section mt-6"
-        onSubmit={(event) => event.preventDefault()}
-      >
+      <form className="form-section mt-6" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email" className="form-label">
             Email
@@ -32,6 +66,9 @@ export function LoginForm() {
             className="input"
             placeholder="you@example.com"
             autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="form-group">
@@ -44,10 +81,25 @@ export function LoginForm() {
             className="input"
             placeholder="Enter your password"
             autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button type="submit" className="btn-primary w-full">
-          Sign In
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-body text-body-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="btn-primary flex w-full items-center justify-center gap-2"
+          disabled={isSubmitting}
+        >
+          {isSubmitting && <Loader2Icon className="h-4 w-4 animate-spin" />}
+          {isSubmitting ? "Signing in…" : "Sign In"}
         </button>
       </form>
 
@@ -56,6 +108,12 @@ export function LoginForm() {
         <Link href="/signup" className="font-bold text-blue-water no-underline hover:text-green-forest">
           Sign up
         </Link>
+      </p>
+
+      <p className="mt-4 rounded-lg bg-[#EEF8E6] px-4 py-3 text-center font-body text-[11px] leading-relaxed text-text-secondary">
+        <strong className="text-green-forest">Demo:</strong> Use any
+        email/password to sign up first, then login. Use an email containing
+        &quot;admin&quot; for admin access.
       </p>
     </div>
   );

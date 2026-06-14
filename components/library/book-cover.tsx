@@ -1,3 +1,5 @@
+import { BookOpenIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import type { Book } from "@/lib/library-data";
 
@@ -39,11 +41,30 @@ export function BookCover({ book, className, variant = "default" }: BookCoverPro
           className
         )}
       >
-        <div className="flex h-full flex-col justify-between p-5">
+        {/* Subtle diagonal pattern decoration */}
+        <div className="absolute inset-0 opacity-[0.04]">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="diag" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="12" stroke="#07593E" strokeWidth="1" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diag)" />
+          </svg>
+        </div>
+
+        <div className="relative flex h-full flex-col items-start justify-between p-5">
           <span className="font-body text-label uppercase tracking-wider text-green-forest/60">
             {book.genre}
           </span>
-          <p className="font-heading text-3xl font-bold tracking-tight text-green-forest/20">
+
+          {/* Centered book icon decoration */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <BookOpenIcon className="h-8 w-8 text-green-forest/[0.08]" />
+          </div>
+
+          {/* Larger initials at bottom */}
+          <p className="font-heading text-4xl font-bold tracking-tight text-green-forest/20">
             {initials}
           </p>
         </div>
