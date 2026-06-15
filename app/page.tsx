@@ -322,7 +322,14 @@ export default function HomePage() {
               <Link key={book.id} href={`/books/${book.id}`} className="group flex gap-4 rounded-xl border border-[#07593E]/[0.08] bg-white p-4 no-underline transition-all hover:-translate-y-1 hover:shadow-card-hover">
                 <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#07593E]/10 to-[#76BE46]/10">
                   {book.imageUrl ? (
-                    <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" loading="lazy" />
+                    <Image
+                      src={book.imageUrl}
+                      alt={book.title}
+                      width={80}
+                      height={112}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center"><span className="font-heading text-sm font-bold text-green-forest/20">{book.title.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</span></div>
                   )}
@@ -364,7 +371,14 @@ export default function HomePage() {
               <Link key={book.id} href={`/books/${book.id}`} className="group flex gap-4 rounded-xl border border-[#07593E]/[0.08] bg-white p-4 no-underline transition-all hover:-translate-y-1 hover:shadow-card-hover">
                 <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#07593E]/10 to-[#76BE46]/10">
                   {book.imageUrl ? (
-                    <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" loading="lazy" />
+                    <Image
+                      src={book.imageUrl}
+                      alt={book.title}
+                      width={80}
+                      height={112}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center"><span className="font-heading text-sm font-bold text-green-forest/20">{book.title.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</span></div>
                   )}
