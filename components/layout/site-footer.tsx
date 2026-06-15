@@ -6,7 +6,7 @@ import { BRAND_FOUNDATION, BRAND_LIBRARY_NAME } from "@/lib/brand";
 const footerLinks = [
   { href: "/books", label: "Books" },
   { href: "/dashboard", label: "My Library" },
-  { href: "/signup", label: "Membership" },
+  { href: "/membership", label: "Membership" },
   { href: "/login", label: "Login" },
   { href: "/admin", label: "Admin" },
 ];
