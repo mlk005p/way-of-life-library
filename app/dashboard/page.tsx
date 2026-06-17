@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BookOpenIcon,
@@ -9,8 +10,14 @@ import {
   InboxIcon,
 } from "lucide-react";
 
+import { PrototypePaymentModal } from "@/components/payment/prototype-payment-modal";
 import { useAuth } from "@/components/providers";
 import { catalogBooks } from "@/lib/library-catalog";
+import {
+  BillingCycle,
+  getMembershipPlan,
+  membershipPlans,
+} from "@/lib/membership-plans";
 
 // Pick some recommendations from catalog
 const recommendedCatalogBooks = catalogBooks
@@ -22,8 +29,33 @@ const recentCatalogBooks = [...catalogBooks]
   .sort((a, b) => b.year - a.year)
   .slice(0, 3);
 
+function getValidCycle(cycle?: string | null): BillingCycle {
+  return cycle === "quarterly" || cycle === "yearly" ? cycle : "monthly";
+}
+
 export default function DashboardPage() {
   const { user, profile, updateMembership, isLoading } = useAuth();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState("family");
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>("monthly");
+  const [lastPaymentId, setLastPaymentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldCheckout = params.get("checkout") === "1";
+    const planId = params.get("plan");
+    const cycle = getValidCycle(params.get("cycle"));
+
+    if (planId) {
+      setSelectedPlanId(getMembershipPlan(planId).id);
+    }
+    setSelectedCycle(cycle);
+
+    if (shouldCheckout) {
+      setCheckoutOpen(true);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -54,6 +86,7 @@ export default function DashboardPage() {
   }
 
   const isMemberActive = profile.membership_status === "active";
+  const selectedPlan = getMembershipPlan(selectedPlanId);
 
   const dashboardStats = [
     {
@@ -102,6 +135,14 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
+            {lastPaymentId && (
+              <p className="mt-3 font-body text-body-sm text-text-secondary">
+                Latest payment:{" "}
+                <span className="font-semibold text-green-forest">
+                  {lastPaymentId}
+                </span>
+              </p>
+            )}
           </div>
           <div>
             {isMemberActive ? (
@@ -115,14 +156,62 @@ export default function DashboardPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => updateMembership("active")}
+                onClick={() => setCheckoutOpen(true)}
                 className="rounded-lg bg-green-forest px-5 py-2.5 font-body text-body-sm font-medium text-white transition-colors hover:bg-green-forest/90"
               >
-                Activate Membership
+                Activate with Payment
               </button>
             )}
           </div>
         </div>
+
+        {!isMemberActive && (
+          <div className="mt-6 rounded-lg border border-[#C8E6A0] bg-[#F8FDF4] p-4">
+            <div className="grid gap-4 md:grid-cols-[1fr_180px_180px] md:items-end">
+              <div>
+                <label htmlFor="dashboard-plan" className="form-label">
+                  Membership plan
+                </label>
+                <select
+                  id="dashboard-plan"
+                  className="select"
+                  value={selectedPlanId}
+                  onChange={(event) => setSelectedPlanId(event.target.value)}
+                >
+                  {membershipPlans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dashboard-cycle" className="form-label">
+                  Billing
+                </label>
+                <select
+                  id="dashboard-cycle"
+                  className="select"
+                  value={selectedCycle}
+                  onChange={(event) =>
+                    setSelectedCycle(getValidCycle(event.target.value))
+                  }
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutOpen(true)}
+                className="rounded-lg bg-orange-sunrise px-5 py-2.5 font-body text-body-sm font-bold text-white transition-colors hover:bg-[#e8851a]"
+              >
+                Pay now
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -218,6 +307,18 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
+
+      <PrototypePaymentModal
+        open={checkoutOpen}
+        plan={selectedPlan}
+        cycle={selectedCycle}
+        onClose={() => setCheckoutOpen(false)}
+        onPaymentComplete={(paymentId) => {
+          setLastPaymentId(paymentId);
+          updateMembership("active");
+          setCheckoutOpen(false);
+        }}
+      />
     </div>
   );
 }

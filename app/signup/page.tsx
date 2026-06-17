@@ -8,10 +8,20 @@ export const metadata: Metadata = {
   description: `Create an account for ${BRAND_LIBRARY_NAME}.`,
 };
 
-export default function SignupPage() {
+type SignupPageProps = {
+  searchParams?: {
+    plan?: string;
+    cycle?: string;
+  };
+};
+
+export default function SignupPage({ searchParams }: SignupPageProps) {
   return (
     <div className="mx-auto flex max-w-container items-center justify-center px-6 py-12 md:px-12 md:py-20">
-      <SignupForm />
+      <SignupForm
+        selectedPlanId={searchParams?.plan}
+        selectedCycle={searchParams?.cycle}
+      />
     </div>
   );
 }

@@ -218,7 +218,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         name,
         password,
         role,
-        membership_status: "active",
+        membership_status: "inactive",
       };
 
       const updatedUsers = [...users, newUser];

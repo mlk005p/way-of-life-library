@@ -8,10 +8,27 @@ import { Loader2Icon } from "lucide-react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { BRAND_LIBRARY_NAME } from "@/lib/brand";
 import { useAuth } from "@/components/providers";
+import {
+  BillingCycle,
+  getCycleLabel,
+  getMembershipPlan,
+  getPlanTotal,
+} from "@/lib/membership-plans";
 
-export function SignupForm() {
+type SignupFormProps = {
+  selectedPlanId?: string;
+  selectedCycle?: string;
+};
+
+function getValidCycle(cycle?: string): BillingCycle {
+  return cycle === "quarterly" || cycle === "yearly" ? cycle : "monthly";
+}
+
+export function SignupForm({ selectedPlanId, selectedCycle }: SignupFormProps) {
   const { signup } = useAuth();
   const router = useRouter();
+  const cycle = getValidCycle(selectedCycle);
+  const selectedPlan = selectedPlanId ? getMembershipPlan(selectedPlanId) : null;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +55,11 @@ export function SignupForm() {
 
     try {
       await signup(name, email, password);
-      router.push("/dashboard");
+      if (selectedPlan) {
+        router.push(`/dashboard?checkout=1&plan=${selectedPlan.id}&cycle=${cycle}`);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -61,6 +82,32 @@ export function SignupForm() {
       <p className="mt-2 text-center font-body text-body text-text-secondary">
         Join {BRAND_LIBRARY_NAME} to browse, request, and share books.
       </p>
+
+      {selectedPlan && (
+        <div className="mt-5 rounded-lg border border-[#C8E6A0] bg-[#EEF8E6] p-4">
+          <p className="font-body text-label uppercase tracking-wider text-text-secondary">
+            Selected membership
+          </p>
+          <div className="mt-2 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-heading text-body font-bold text-green-forest">
+                {selectedPlan.name}
+              </p>
+              <p className="font-body text-label text-text-secondary">
+                {cycle.charAt(0).toUpperCase() + cycle.slice(1)} billing
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-heading text-h4 font-bold text-green-forest">
+                ₹{getPlanTotal(selectedPlan, cycle).toLocaleString("en-IN")}
+              </p>
+              <p className="font-body text-label text-text-secondary">
+                Due today / {getCycleLabel(cycle)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form className="form-section mt-6" onSubmit={handleSubmit}>
         <div className="form-group">
