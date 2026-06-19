@@ -36,6 +36,7 @@ export function SignupForm({ selectedPlanId, selectedCycle }: SignupFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,7 +55,19 @@ export function SignupForm({ selectedPlanId, selectedCycle }: SignupFormProps) {
     setIsSubmitting(true);
 
     try {
-      await signup(name, email, password);
+      const res = await signup(name, email, password);
+      if (!res.success) {
+        setError(res.error || "Something went wrong. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (res.needsVerification) {
+        setVerificationSent(true);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (selectedPlan) {
         router.push(`/dashboard?checkout=1&plan=${selectedPlan.id}&cycle=${cycle}`);
       } else {
@@ -66,9 +79,22 @@ export function SignupForm({ selectedPlanId, selectedCycle }: SignupFormProps) {
       } else {
         setError("Something went wrong. Please try again.");
       }
-    } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (verificationSent) {
+    return (
+      <div className="card-padded w-full max-w-md text-center">
+        <div className="mb-6 flex justify-center">
+          <BrandLogo variant="auth" />
+        </div>
+        <h1 className="font-heading text-h2 text-green-forest">Check your email</h1>
+        <p className="mt-4 font-body text-body text-text-secondary">
+          We sent a verification link to <strong>{email}</strong>. Please verify your email to continue.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -192,12 +218,6 @@ export function SignupForm({ selectedPlanId, selectedCycle }: SignupFormProps) {
         <Link href="/login" className="font-bold text-blue-water no-underline hover:text-green-forest">
           Sign in
         </Link>
-      </p>
-
-      <p className="mt-4 rounded-lg bg-[#EEF8E6] px-4 py-3 text-center font-body text-[11px] leading-relaxed text-text-secondary">
-        <strong className="text-green-forest">Demo:</strong> Use any
-        email/password to sign up first, then login. Use an email containing
-        &quot;admin&quot; for admin access.
       </p>
     </div>
   );

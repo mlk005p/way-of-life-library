@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { Book } from "@/lib/library-data";
+import { supabase } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
 // Auth Types
@@ -16,24 +17,13 @@ import type { Book } from "@/lib/library-data";
 type User = {
   id: string;
   email: string;
-  name: string;
+  full_name: string;
 };
 
 type Profile = {
   id: string;
-  name: string;
-  email: string;
+  full_name: string;
   role: "user" | "admin";
-  membership_status: "active" | "inactive" | "expired";
-};
-
-type StoredUser = {
-  id: string;
-  email: string;
-  name: string;
-  password: string;
-  role: "user" | "admin";
-  membership_status: "active" | "inactive" | "expired";
 };
 
 type AuthContextValue = {
@@ -43,13 +33,13 @@ type AuthContextValue = {
   login: (
     email: string,
     password: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; profile?: Profile | null }>;
   signup: (
     name: string,
     email: string,
     password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  ) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
+  logout: () => Promise<void>;
   updateMembership: (status: "active" | "inactive" | "expired") => void;
 };
 
@@ -76,41 +66,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 // Storage helpers
 // ---------------------------------------------------------------------------
 
-const USERS_KEY = "wol_users";
-const SESSION_KEY = "wol_session";
 const CART_KEY = "wol_cart";
-
-function getStoredUsers(): StoredUser[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredUsers(users: StoredUser[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function getSession(): StoredUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveSession(user: StoredUser | null) {
-  if (user) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(SESSION_KEY);
-  }
-}
 
 function getStoredCart(): Book[] {
   if (typeof window === "undefined") return [];
@@ -123,11 +79,8 @@ function getStoredCart(): Book[] {
 }
 
 function saveCart(items: Book[]) {
+  if (typeof window === "undefined") return;
   localStorage.setItem(CART_KEY, JSON.stringify(items));
-}
-
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,53 +92,101 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hydrate session on mount
-  useEffect(() => {
-    const session = getSession();
-    if (session) {
-      setUser({ id: session.id, email: session.email, name: session.name });
-      setProfile({
-        id: session.id,
-        name: session.name,
-        email: session.email,
-        role: session.role,
-        membership_status: session.membership_status,
-      });
+  // Fetch profile by user ID
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error || !data) {
+      console.error("Error fetching profile:", error);
+      return null;
     }
-    setIsLoading(false);
+    return data as Profile;
   }, []);
+
+  // Hydrate session and set up listener on mount
+  useEffect(() => {
+    let mounted = true;
+
+    async function getInitialSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user && mounted) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          full_name: session.user.user_metadata?.full_name || "",
+        });
+        const fetchedProfile = await fetchProfile(session.user.id);
+        if (mounted && fetchedProfile) {
+          setProfile(fetchedProfile);
+        }
+      }
+      if (mounted) {
+        setIsLoading(false);
+      }
+    }
+
+    getInitialSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          full_name: session.user.user_metadata?.full_name || "",
+        });
+        const fetchedProfile = await fetchProfile(session.user.id);
+        setProfile(fetchedProfile);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
 
   const login = useCallback(
     async (
       email: string,
       password: string
-    ): Promise<{ success: boolean; error?: string }> => {
-      const users = getStoredUsers();
-      const found = users.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase()
-      );
-
-      if (!found) {
-        return { success: false, error: "No account found with this email." };
-      }
-
-      if (found.password !== password) {
-        return { success: false, error: "Incorrect password." };
-      }
-
-      setUser({ id: found.id, email: found.email, name: found.name });
-      setProfile({
-        id: found.id,
-        name: found.name,
-        email: found.email,
-        role: found.role,
-        membership_status: found.membership_status,
+    ): Promise<{ success: boolean; error?: string; profile?: Profile | null }> => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      saveSession(found);
 
-      return { success: true };
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      // Proactively fetch and set the profile before returning so callers can redirect correctly
+      if (data.session?.user) {
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email || "",
+          full_name: data.session.user.user_metadata?.full_name || "",
+        });
+        const fetchedProfile = await fetchProfile(data.session.user.id);
+        setProfile(fetchedProfile);
+        return { success: true, profile: fetchedProfile };
+      }
+
+      return { success: true, profile: null };
     },
-    []
+    [fetchProfile]
   );
 
   const signup = useCallback(
@@ -193,75 +194,52 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       name: string,
       email: string,
       password: string
-    ): Promise<{ success: boolean; error?: string }> => {
-      const users = getStoredUsers();
-      const exists = users.some(
-        (u) => u.email.toLowerCase() === email.toLowerCase()
-      );
+    ): Promise<{ success: boolean; error?: string; needsVerification?: boolean }> => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
 
-      if (exists) {
-        return {
-          success: false,
-          error: "An account with this email already exists.",
-        };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      const role: "user" | "admin" = email
-        .toLowerCase()
-        .includes("admin")
-        ? "admin"
-        : "user";
+      // If auto-login is enabled and no email confirmation is required, set the session immediately
+      if (data.session?.user) {
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email || "",
+          full_name: data.session.user.user_metadata?.full_name || "",
+        });
+        const fetchedProfile = await fetchProfile(data.session.user.id);
+        setProfile(fetchedProfile);
+        return { success: true, needsVerification: false };
+      } else if (data.user) {
+        // User created but no session means email confirmation is likely required
+        return { success: true, needsVerification: true };
+      }
 
-      const newUser: StoredUser = {
-        id: generateId(),
-        email,
-        name,
-        password,
-        role,
-        membership_status: "inactive",
-      };
-
-      const updatedUsers = [...users, newUser];
-      saveStoredUsers(updatedUsers);
-
-      setUser({ id: newUser.id, email: newUser.email, name: newUser.name });
-      setProfile({
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        membership_status: newUser.membership_status,
-      });
-      saveSession(newUser);
-
-      return { success: true };
+      return { success: true, needsVerification: false };
     },
-    []
+    [fetchProfile]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
-    saveSession(null);
   }, []);
 
   const updateMembership = useCallback(
-    (status: "active" | "inactive" | "expired") => {
-      if (!profile) return;
-
-      const updatedProfile = { ...profile, membership_status: status };
-      setProfile(updatedProfile);
-
-      // Update stored users list
-      const users = getStoredUsers();
-      const idx = users.findIndex((u) => u.id === profile.id);
-      if (idx !== -1) {
-        users[idx] = { ...users[idx], membership_status: status };
-        saveStoredUsers(users);
-        saveSession(users[idx]);
-      }
+    async (status: "active" | "inactive" | "expired") => {
+      console.warn("TODO: updateMembership needs to be updated to write to the memberships table");
     },
-    [profile]
+    []
   );
 
   return (

@@ -6,13 +6,12 @@ import { useEffect, useState } from "react";
 import { MenuIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/providers";
 
 export const navItems = [
   { href: "/", label: "Home" },
   { href: "/books", label: "Books" },
   { href: "/membership", label: "Membership" },
-  { href: "/dashboard", label: "My Library" },
-  { href: "/admin", label: "Admin" },
 ] as const;
 
 function DesktopNavLink({
@@ -67,6 +66,7 @@ function MobileNavLink({
 export function MainNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     setOpen(false);
@@ -96,7 +96,7 @@ export function MainNav() {
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="fixed inset-y-0 left-0 z-modal flex w-[280px] flex-col border-r border-[#07593E]/[0.08] bg-white md:hidden">
+          <div className="fixed inset-y-0 left-0 z-modal flex w-[280px] flex-col border-r border-[#07593E]/[0.06] bg-white md:hidden">
             <div className="flex h-16 items-center border-b border-[#07593E]/[0.06] px-6">
               <span className="font-heading font-medium text-green-forest">Menu</span>
               <button
@@ -108,7 +108,7 @@ export function MainNav() {
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex-1 px-2">
+            <nav className="flex-1 px-2 flex flex-col">
               {navItems.map((item) => (
                 <MobileNavLink
                   key={item.href}
@@ -117,14 +117,40 @@ export function MainNav() {
                   onClick={() => setOpen(false)}
                 />
               ))}
+              {!user ? (
+                <MobileNavLink
+                  href="/login"
+                  label="Login"
+                  onClick={() => setOpen(false)}
+                />
+              ) : (
+                <MobileNavLink
+                  href="/dashboard"
+                  label="My Library"
+                  onClick={() => setOpen(false)}
+                />
+              )}
             </nav>
             <div className="border-t border-[#07593E]/[0.06] p-4">
-              <Link
-                href="/signup"
-                className="block w-full rounded-lg bg-green-forest py-3 text-center font-body text-body-sm font-medium text-white no-underline hover:bg-green-forest/90"
-              >
-                Sign up
-              </Link>
+              {!user ? (
+                <Link
+                  href="/signup"
+                  className="block w-full rounded-lg bg-green-forest py-3 text-center font-body text-body-sm font-medium text-white no-underline hover:bg-green-forest/90"
+                >
+                  Become Member
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setOpen(false);
+                  }}
+                  className="block w-full rounded-lg border border-[#07593E] py-3 text-center font-body text-body-sm font-medium text-[#07593E] hover:bg-[#07593E]/[0.04]"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </>

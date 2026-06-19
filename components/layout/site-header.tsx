@@ -66,7 +66,7 @@ export function SiteHeader() {
                   href="/signup"
                   className="rounded-lg bg-green-forest px-4 py-2 font-body text-body-sm font-medium text-white no-underline transition-colors hover:bg-green-forest/90"
                 >
-                  Sign up
+                  Become Member
                 </Link>
               </div>
             )}

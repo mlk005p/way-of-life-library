@@ -8,7 +8,6 @@ const footerLinks = [
   { href: "/dashboard", label: "My Library" },
   { href: "/membership", label: "Membership" },
   { href: "/login", label: "Login" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export function SiteFooter() {
