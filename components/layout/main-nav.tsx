@@ -66,7 +66,10 @@ function MobileNavLink({
 export function MainNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, profile } = useAuth();
+
+  // All nav items are always visible; admin-only routes are handled in the header avatar
+  const visibleNavItems = navItems;
 
   useEffect(() => {
     setOpen(false);
@@ -75,7 +78,7 @@ export function MainNav() {
   return (
     <>
       <nav className="hidden items-center gap-1 md:flex">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <DesktopNavLink key={item.href} href={item.href} label={item.label} />
         ))}
       </nav>
@@ -96,7 +99,7 @@ export function MainNav() {
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="fixed inset-y-0 left-0 z-modal flex w-[280px] flex-col border-r border-[#07593E]/[0.06] bg-white md:hidden">
+          <div className="fixed inset-y-0 left-0 z-modal flex w-[280px] flex-col border-r border-[#07593E]/[0.08] bg-white md:hidden">
             <div className="flex h-16 items-center border-b border-[#07593E]/[0.06] px-6">
               <span className="font-heading font-medium text-green-forest">Menu</span>
               <button
@@ -109,7 +112,7 @@ export function MainNav() {
               </button>
             </div>
             <nav className="flex-1 px-2 flex flex-col">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <MobileNavLink
                   key={item.href}
                   href={item.href}
@@ -121,6 +124,12 @@ export function MainNav() {
                 <MobileNavLink
                   href="/login"
                   label="Login"
+                  onClick={() => setOpen(false)}
+                />
+              ) : profile?.role === "admin" ? (
+                <MobileNavLink
+                  href="/admin/dashboard"
+                  label="Admin Panel"
                   onClick={() => setOpen(false)}
                 />
               ) : (

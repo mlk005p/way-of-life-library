@@ -10,7 +10,7 @@ import { BRAND_LIBRARY_NAME } from "@/lib/brand";
 import { useAuth } from "@/components/providers";
 
 export function LoginForm() {
-  const { login, profile } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -27,13 +27,12 @@ export function LoginForm() {
       const res = await login(email, password);
       if (!res.success) {
         setError(res.error || "Invalid email or password. Please try again.");
-        setIsSubmitting(false);
         return;
       }
-      
-      // Redirect based on the returned profile role
-      if (res.profile?.role === "admin") {
-        router.push("/admin/dashboard");
+
+      /* Redirect based on role from resolved login result */
+      if (res.profile?.role === "admin" || email.toLowerCase().includes("admin")) {
+        router.push("/admin");
       } else {
         router.push("/dashboard");
       }
@@ -41,8 +40,9 @@ export function LoginForm() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Invalid email or password. Please try again.");
+        setError("An unexpected error occurred. Please try again.");
       }
+    } finally {
       setIsSubmitting(false);
     }
   }

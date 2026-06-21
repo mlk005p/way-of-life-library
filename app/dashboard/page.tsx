@@ -106,7 +106,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-12 md:py-16">
       <h1 className="font-heading text-h1 font-medium tracking-tight text-green-forest">
-        Welcome back, {user.name}
+        Welcome back, {user.full_name || user.email}
       </h1>
       <p className="mt-2 font-body text-body text-text-secondary">
         Manage your membership, borrowed books, and reading activity.

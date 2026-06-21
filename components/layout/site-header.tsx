@@ -9,10 +9,26 @@ import { MainNav } from "@/components/layout/main-nav";
 import { CartDrawer } from "@/components/library/cart-drawer";
 import { useAuth, useCart } from "@/components/providers";
 
+/** Avatar link that routes admins to /admin/dashboard and regular users to /dashboard */
+function AdminAvatarLink({ user, isAdmin }: { user: { full_name: string; email: string }; isAdmin: boolean }) {
+  const href = isAdmin ? "/admin/dashboard" : "/dashboard";
+  const initial = (user.full_name || user.email).charAt(0).toUpperCase();
+  return (
+    <Link
+      href={href}
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EEF8E6] border-2 border-green-nature font-body text-xs font-bold text-green-forest no-underline"
+      title={isAdmin ? "Admin Dashboard" : "My Dashboard"}
+    >
+      {initial}
+    </Link>
+  );
+}
+
 export function SiteHeader() {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const { itemCount } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
+  const isAdmin = profile?.role === "admin";
 
   return (
     <>
@@ -40,12 +56,7 @@ export function SiteHeader() {
 
             {user ? (
               <div className="hidden items-center gap-3 sm:flex">
-                <Link
-                  href="/dashboard"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EEF8E6] border-2 border-green-nature font-body text-xs font-bold text-green-forest no-underline"
-                >
-                  {user.name.charAt(0).toUpperCase()}
-                </Link>
+                <AdminAvatarLink user={user} isAdmin={isAdmin} />
                 <button
                   type="button"
                   onClick={logout}

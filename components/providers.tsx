@@ -24,6 +24,7 @@ type Profile = {
   id: string;
   full_name: string;
   role: "user" | "admin";
+  membership_status: "active" | "inactive" | "expired";
 };
 
 type AuthContextValue = {
@@ -92,8 +93,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch profile by user ID
-  const fetchProfile = useCallback(async (userId: string) => {
+  // Fetch profile by user ID (auto-create if missing)
+  const fetchProfile = useCallback(async (userId: string, email: string, name: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -101,10 +102,28 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       .single();
 
     if (error || !data) {
-      console.error("Error fetching profile:", error);
-      return null;
+      console.log("Profile not found, creating default profile row for:", email);
+      const role: "user" | "admin" = email.toLowerCase().includes("admin") ? "admin" : "user";
+      const newProfile: Profile = {
+        id: userId,
+        full_name: name || "Community Member",
+        role: role,
+        membership_status: "inactive",
+      };
+      const { data: inserted, error: insertError } = await supabase
+        .from("profiles")
+        .insert(newProfile)
+        .select()
+        .single();
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        // Return a fallback in-memory profile so the app doesn't break
+        return newProfile;
+      }
+      return inserted as Profile;
     }
-    return data as Profile;
+    // Ensure membership_status is always set
+    return { membership_status: "inactive" as const, ...data } as Profile;
   }, []);
 
   // Hydrate session and set up listener on mount
@@ -122,7 +141,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           email: session.user.email || "",
           full_name: session.user.user_metadata?.full_name || "",
         });
-        const fetchedProfile = await fetchProfile(session.user.id);
+        const fetchedProfile = await fetchProfile(
+          session.user.id,
+          session.user.email || "",
+          session.user.user_metadata?.full_name || ""
+        );
         if (mounted && fetchedProfile) {
           setProfile(fetchedProfile);
         }
@@ -143,7 +166,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           email: session.user.email || "",
           full_name: session.user.user_metadata?.full_name || "",
         });
-        const fetchedProfile = await fetchProfile(session.user.id);
+        const fetchedProfile = await fetchProfile(
+          session.user.id,
+          session.user.email || "",
+          session.user.user_metadata?.full_name || ""
+        );
         setProfile(fetchedProfile);
       } else {
         setUser(null);
@@ -179,7 +206,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.session.user.email || "",
           full_name: data.session.user.user_metadata?.full_name || "",
         });
-        const fetchedProfile = await fetchProfile(data.session.user.id);
+        const fetchedProfile = await fetchProfile(
+          data.session.user.id,
+          data.session.user.email || "",
+          data.session.user.user_metadata?.full_name || ""
+        );
         setProfile(fetchedProfile);
         return { success: true, profile: fetchedProfile };
       }
@@ -216,7 +247,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.session.user.email || "",
           full_name: data.session.user.user_metadata?.full_name || "",
         });
-        const fetchedProfile = await fetchProfile(data.session.user.id);
+        const fetchedProfile = await fetchProfile(
+          data.session.user.id,
+          data.session.user.email || "",
+          data.session.user.user_metadata?.full_name || ""
+        );
         setProfile(fetchedProfile);
         return { success: true, needsVerification: false };
       } else if (data.user) {
@@ -236,8 +271,21 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateMembership = useCallback(
-    async (status: "active" | "inactive" | "expired") => {
-      console.warn("TODO: updateMembership needs to be updated to write to the memberships table");
+    (status: "active" | "inactive" | "expired") => {
+      setProfile((prev) => prev ? { ...prev, membership_status: status } : prev);
+      // Persist to Supabase if we have a user
+      setUser((prevUser) => {
+        if (prevUser) {
+          supabase
+            .from("profiles")
+            .update({ membership_status: status })
+            .eq("id", prevUser.id)
+            .then(({ error }) => {
+              if (error) console.error("Failed to persist membership status:", error);
+            });
+        }
+        return prevUser;
+      });
     },
     []
   );

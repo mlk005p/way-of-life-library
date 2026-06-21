@@ -9,7 +9,7 @@ import { BRAND_LIBRARY_NAME } from "@/lib/brand";
 import { useAuth } from "@/components/providers";
 
 export function AdminLoginForm() {
-  const { login, logout, profile } = useAuth();
+  const { login, logout } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");

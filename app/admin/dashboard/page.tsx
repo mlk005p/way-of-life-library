@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   BookOpenIcon,
   CheckCircleIcon,
